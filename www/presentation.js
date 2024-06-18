@@ -30,16 +30,16 @@ var makeAbs = function(url){
 	}
 	if (!absUrl) {
 		absUrl = url;
-	};
-	return absUrl;
 }
+    return absUrl;
+};
 
 var exec = function(){
   var args = arguments;
   setTimeout(function() {
     execRaw.apply(undefined, args);
   }, 0);
-}
+};
 
 /** WebIDL: NavigatorPresentation
 
@@ -54,19 +54,26 @@ var exec = function(){
   TODO(mla): EventTarget implementation.
 
  */
+
 function NavigatorPresentation() {
     // In case of mirroring, display the following placeholder page
-    var defaultDisplay = makeAbs("presentation/display.html");
+    var defaultDisplay = makeAbs("about:blank");
+
+    /*
     var c=document.getElementsByTagName("script");
       for(var i=0; i<c.length; i++){
-      if (c[i] && c[i].src && c[i].src.indexOf("/cordova.js") != -1){
-        defaultDisplay= c[i].src.replace("/cordova.js","/presentation/display.html");
+      if (c[i] && c[i].src && c[i].src.indexOf("/cordova.js") !== -1){
+        defaultDisplay= c[i].src.replace("/cordova.js","about:blank");
       }
     }
-    exec(/*successCallback*/Function, /*errorCallback*/Function, "Presentation", "setDefaultDisplay", [ defaultDisplay ]);}
+    */
+
+    exec(/*successCallback*/Function, /*errorCallback*/Function, "Presentation", "setDefaultDisplay", [null]);
+}
 
 Object.defineProperty(NavigatorPresentation.prototype,"requestSession",{
 get: function () {
+        console.log("PRESENTATION: Calling navigatorPresentationRequestSession");
   return navigatorPresentationRequestSession;
 }
 });
@@ -76,25 +83,26 @@ Object.defineProperty(NavigatorPresentation.prototype, "onavailablechange", {
     return onavailablechange;
   },
   set: function(eventCallback) {
-    if (typeof eventCallback == "function" || eventCallback == null || eventCallback == undefined) {
+        if (typeof eventCallback === "function" || eventCallback === null || eventCallback === undefined) {
       onavailablechange = eventCallback;
       if (onavailablechange) {
         //trigger the service to serve screen states
         var scb = function(res){
-            if (typeof onavailablechange == "function") {
+                    if (typeof onavailablechange === "function") {
                 var evt = new AvailableChangeEvent("availablechange",res);
                 onavailablechange(evt);
             }
-        }
+                };
         exec(scb, function(){}, "Presentation", "addWatchAvailableChange", []);
       }
       else {
         //stop the service serving screen states
         exec(function(){}, function(){}, "Presentation", "clearWatchAvailableChange", []);
       }
-    };
+        }
   }
 });
+
 //hold the reference to the user defined callback
 var onavailablechange = undefined;
 
@@ -105,28 +113,38 @@ get: function () {
 }
 });
 
-var navigatorPresentationRequestSession = function(url) {
+var navigatorPresentationRequestSession = function (url, options) {
+    console.log("PRESENTATION: navigatorPresentationRequestSession init");
+
     var delSession = {
         _id:"",
         state: DISCONNECTED,
         onstatechange: function(){},
         onmessage: function(){}
     };
+
     delSession.postMessage = presentationSessionPostMessage(delSession);
     delSession.close = presentationSessionClose(delSession);
 
+    delSession.hide = presentationSessionHide(delSession);
+    delSession.show = presentationSessionShow(delSession);
+
+    console.log("PRESENTATION: navigatorPresentationRequestSession delSession", delSession);
+
     var successCallback = function(result){
+        console.log("PRESENTATION: Presentation requestSession successCallback", result);
+
       // result == { id: String, eventType: String, value: String }
       delSession._id = result.id;
       switch(result.eventType) {
         case "onstatechange":
           delSession.state=result.value;
-               if (typeof delSession.onstatechange == "function") {
+                if (typeof delSession.onstatechange === "function") {
                delSession.onstatechange(result.value);
                }
           break;
         case "onmessage":
-               if (typeof delSession.onmessage == "function") {
+                if (typeof delSession.onmessage === "function") {
           delSession.onmessage(result.value);
                }
           break;
@@ -134,10 +152,14 @@ var navigatorPresentationRequestSession = function(url) {
           break;
       }
     };
+
     var errorCallback = function(){
 
     };
-    exec(successCallback, errorCallback, "Presentation", "requestSession", [ makeAbs(url) ]);
+
+    console.log("PRESENTATION: Calling Presentation requestSession");
+
+    exec(successCallback, errorCallback, "Presentation", "requestSession", [makeAbs(url), options]);
     return new PresentationSession(delSession);
 };
 
@@ -158,7 +180,7 @@ var navigatorPresentationRequestSession = function(url) {
  */
 var AvailableChangeEvent = function(type, eventInitDict){
     this.type = type;
-    var available = eventInitDict && eventInitDict.available == true;
+    var available = eventInitDict && eventInitDict.available === true;
     Object.defineProperty(this, "available", {
       get: function () {
         return available;
@@ -192,14 +214,14 @@ var PresentationSession = function(delSession){
   var onstatechange = null;
   var self = this;
   delSession.onstatechange = function(){
-    if (typeof onstatechange == "function") {
+        if (typeof onstatechange === "function") {
       onstatechange.call(null);
-    };
+        }
   };
   delSession.onmessage = function(msg){
-    if (typeof onmessage == "function") {
+        if (typeof onmessage === "function") {
       onmessage.call(null,msg);
-    };
+        }
   };
   Object.defineProperty(this, "state", {
     get: function () {
@@ -211,9 +233,9 @@ var PresentationSession = function(delSession){
       return onmessage;
     },
     set: function(value){
-      if (typeof value == "function" || value == null) {
+            if (typeof value === "function" || value === null) {
         onmessage = value;
-      };
+            }
     }
   });
   Object.defineProperty(this, "onstatechange", {
@@ -221,7 +243,7 @@ var PresentationSession = function(delSession){
       return onstatechange;
     },
     set: function(value){
-      if (typeof value == "function" || value == null) {
+            if (typeof value === "function" || value === null) {
         onstatechange = value;
       };
     }
@@ -242,6 +264,23 @@ var PresentationSession = function(delSession){
       };
     }
   });
+
+    Object.defineProperty(this, "hide", {
+        get: function () {
+            return function () {
+                return delSession.hide();
+            };
+        }
+    });    
+
+    Object.defineProperty(this, "show", {
+        get: function () {
+            return function () {
+                return delSession.show();
+            };
+        }
+    });  
+
 };
 
 var presentationSessionPostMessage = function(ds){
@@ -255,6 +294,19 @@ var presentationSessionClose = function(ds){
                exec(/*successCallback*/Function, /*errorCallback*/Function, "Presentation", "presentationSessionClose", [ ds._id ]);
   };
 };
+
+var presentationSessionHide = function (ds) {
+    return function () {
+        exec(/*successCallback*/Function, /*errorCallback*/Function, "Presentation", "presentationSessionHide", [ds._id]);
+    };
+};
+
+var presentationSessionShow = function (ds) {
+    return function () {
+        exec(/*successCallback*/Function, /*errorCallback*/Function, "Presentation", "presentationSessionShow", [ds._id]);
+    };
+};
+
 
 /** WebIDL: PresentEvent
 
@@ -270,6 +322,9 @@ var presentationSessionClose = function(ds){
   http://www.w3.org/2014/secondscreen/presentation-api/20140721/#PresentEvent_interface
 
  */
+
+
+console.log("PRESENTATION: NavigatorPresentation.prototype before module.exports", NavigatorPresentation.prototype);
 
 module.exports = new NavigatorPresentation();
 

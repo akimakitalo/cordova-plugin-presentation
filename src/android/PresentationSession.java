@@ -112,6 +112,46 @@ public class PresentationSession {
 		}
 	}
 	
+	public void hidePresentation(CallbackContext callbackContext) {
+		getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (getPresentation() != null) {
+					if (getPresentation().isShowing()) {
+						getPresentation().hide();
+						callbackContext.success();
+					}
+					else {
+						callbackContext.error("Presentation is not currently showing");
+					}					
+				}
+				else {
+					callbackContext.error("Presentation not found");
+				}
+			}
+		});
+	}
+
+	public void showPresentation(CallbackContext callbackContext) {
+		getActivity().runOnUiThread(new Runnable() {
+			@Override
+			public void run() {
+				if (getPresentation() != null) {
+					if (!getPresentation().isShowing()) {
+						getPresentation().show();
+						callbackContext.success();
+					}
+					else {
+						callbackContext.error("Presentation is already showing");
+					}
+				}
+				else {
+					callbackContext.error("Presentation not found");
+				}
+			}
+		});
+	}
+
 	/**
 	 * @return the {@link SecondScreenPresentation} associated with this session to display the presenting page on it.
 	 */

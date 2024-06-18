@@ -49,6 +49,7 @@ public class CDVPresentationPlugin extends CordovaPlugin implements DisplayManag
 	private DisplayManager displayManager;
 	private Activity activity;
 	private String defaultDisplay;
+	
 	@Override
 	public void initialize(CordovaInterface cordova, CordovaWebView webView) {
 		activity = cordova.getActivity();
@@ -75,23 +76,36 @@ public class CDVPresentationPlugin extends CordovaPlugin implements DisplayManag
 		if (action.equals("addWatchAvailableChange")) {
 			LOG.d(LOG_TAG, "addWatchAvailableChange");
 			return addWatchAvailableChange(args,callbackContext);
-		} else if (action.equals("clearWatchAvailableChange")) {
+		}
+		else if (action.equals("clearWatchAvailableChange")) {
 			LOG.d(LOG_TAG, "clearWatchAvailableChange");
 			return clearWatchAvailableChange(args,callbackContext);
-		} else if (action.equals("requestSession")) {
+		}
+		else if (action.equals("requestSession")) {
 			LOG.d(LOG_TAG, "requestSession");
 			return requestSession(args,callbackContext);
-		} else if (action.equals("presentationSessionPostMessage")) {
+		}
+		else if (action.equals("presentationSessionPostMessage")) {
 			LOG.d(LOG_TAG, "presentationSessionPostMessage");
 			return presentationSessionPostMessage(args,callbackContext);
-		} else if (action.equals("presentationSessionClose")) {
+		}
+		else if (action.equals("presentationSessionClose")) {
 			LOG.d(LOG_TAG, "presentationSessionClose");
 			return presentationSessionClose(args,callbackContext);
 		}
+		else if (action.equals("presentationSessionHide")) {
+			LOG.d(LOG_TAG, "presentationSessionHide");
+			return presentationSessionHide(args,callbackContext);
+		}
+		else if (action.equals("presentationSessionShow")) {
+			LOG.d(LOG_TAG, "presentationSessionShow");
+			return presentationSessionShow(args,callbackContext);
+		}		
 		else if (action.equals("setDefaultDisplay")) {
 			LOG.d(LOG_TAG, "setDefaultDisplay");
 			return setDefaultDisplay(args,callbackContext);
 		}
+
 		return false;
 	}
 
@@ -181,6 +195,37 @@ public class CDVPresentationPlugin extends CordovaPlugin implements DisplayManag
 		}
 		return true;
 	}
+
+	private boolean presentationSessionHide(JSONArray args, CallbackContext callbackContext) throws JSONException{
+		String id = args.get(0).toString();
+
+		PresentationSession session = getSessions().get(id);
+
+		if (session != null) {
+			session.hidePresentation(callbackContext);
+		}
+		else {
+			callbackContext.error("Session not found");
+		}		
+
+		return true;
+	}
+
+	private boolean presentationSessionShow(JSONArray args, CallbackContext callbackContext) throws JSONException{
+		String id = args.get(0).toString();
+
+		PresentationSession session = getSessions().get(id);
+
+		if (session != null) {
+			session.showPresentation(callbackContext);
+		}
+		else {
+			callbackContext.error("Session not found");
+		}
+
+		return true;
+	}
+
 
 	/**
 	 * 
@@ -294,26 +339,34 @@ public class CDVPresentationPlugin extends CordovaPlugin implements DisplayManag
 			presentations[counter] = presentation;
 			items[counter++] = presentation.getDisplay().getName();
 		}
-		builder.setTitle("Select Presentation Display").setItems(items,
-				new DialogInterface.OnClickListener() {
-					public void onClick(DialogInterface dialog, int which) {
-						SecondScreenPresentation presentation = presentations[which];
+
+		//cancel Dialog
+
+		SecondScreenPresentation presentation = presentations[0];
 						session.setPresentation(presentation);
 						getSessions().put(session.getId(), session);
-					}
-				}).setCancelable(false).setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
-					@Override
-					public void onClick(DialogInterface dialog, int which) {
-						dialog.cancel();
-					}
-				}).setOnCancelListener(new DialogInterface.OnCancelListener() {
-					@Override
-					public void onCancel(DialogInterface dialog) {
-						session.setState(PresentationSession.DISCONNECTED);
-					}
-				});
-		AlertDialog dialog = builder.create();
-		dialog.show();
+
+		//cancel Dialog
+		//builder.setTitle("Select Presentation Display").setItems(items,
+				//new DialogInterface.OnClickListener() {
+					//public void onClick(DialogInterface dialog, int which) {
+						//SecondScreenPresentation presentation = presentations[which];
+						//session.setPresentation(presentation);
+						//getSessions().put(session.getId(), session);
+					//}
+				//}).setCancelable(false).setNegativeButton("Cancel", new DialogInterface.OnClickListener(){
+					//@Override
+					//public void onClick(DialogInterface dialog, int which) {
+						//dialog.cancel();
+					//}
+				//}).setOnCancelListener(new DialogInterface.OnCancelListener() {
+					//@Override
+					//public void onCancel(DialogInterface dialog) {
+						//session.setState(PresentationSession.DISCONNECTED);
+					//}
+				//});
+		//AlertDialog dialog = builder.create();
+		//dialog.show();
 	};
 	
 	@Override

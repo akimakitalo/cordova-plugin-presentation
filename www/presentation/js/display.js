@@ -22,7 +22,18 @@ initializePresentation: function() {
     var nameElement = document.querySelector('#name');
     nameElement.dataset.name=location.hash;
     //just make it fit nicely
-    nameElement.style.fontSize=Math.floor(window.innerHeight/12)+"px"
+    nameElement.style.fontSize=Math.floor(window.innerHeight/12)+"px";
+    document.addEventListener('deviceready', function () {
+      console.log ('88888888888');
+      navigator.presentation.onpresent = function(event){
+        console.log ('aaaaaaaaa');
+        if(event.session){
+          console.log ('event.session: ', event.session);
+        }
+      };
+    }, false);
+
+    console.log (navigator);
 }
 };
 app.initializePresentation();

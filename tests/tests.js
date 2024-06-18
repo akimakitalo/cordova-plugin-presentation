@@ -25,7 +25,7 @@ exports.defineAutoTests = function () {
 
         it("should contain a requestSession function", function () {
             expect(navigator.presentation.requestSession).toBeDefined();
-            expect(typeof navigator.presentation.requestSession == 'function').toBe(true);
+            expect(typeof navigator.presentation.requestSession === 'function').toBe(true);
         });
     });
 
